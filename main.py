@@ -1,10 +1,10 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-app = FastAPI()
-from fastapi.middleware.cors import CORSMiddleware
+app = FastAPI(title="Rajesh Hotel API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -12,8 +12,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Database setup - permanent dabba
-engine = create_engine("sqlite:///./hotel.db")
+engine = create_engine("sqlite:///./hotel.db", connect_args={"check_same_thread": False})
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
@@ -28,6 +29,10 @@ Base.metadata.create_all(bind=engine)
 class Item(BaseModel):
     name: str
     price: float
+
+@app.get("/")
+def home():
+    return {"message": "Rajesh Hotel API is Live ra!"}
 
 @app.post("/order")
 def create_order(item: Item):
@@ -44,6 +49,7 @@ def get_all_orders():
     orders = db.query(OrderTable).all()
     db.close()
     return orders
+
 @app.delete("/order/{order_id}")
 def delete_order(order_id: int):
     db = Session()
@@ -56,6 +62,7 @@ def delete_order(order_id: int):
     else:
         db.close()
         return {"message": "Id dorakaledu ra!"}
+
 @app.put("/order/{order_id}")
 def update_order(order_id: int, item: Item):
     db = Session()
@@ -69,10 +76,10 @@ def update_order(order_id: int, item: Item):
     else:
         db.close()
         return {"message": "Id dorakaledu!"}
+
 @app.get("/search")
 def search_order(name: str):
     db = Session()
-    # name lo oka part unna chalu, pattukuntadi
     orders = db.query(OrderTable).filter(OrderTable.name.ilike(f"%{name}%")).all()
     db.close()
     return orders
