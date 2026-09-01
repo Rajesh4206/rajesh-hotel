@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Hotel - 5 Star</title>
+<style>
+body { font-family: sans-serif; background: #f8f8f8; display: flex; justify-content: center; }
+.card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 400px; margin-top: 30px; }
+h1 { color: #fc8019; text-align: center; }
+input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; }
+button { background: #fc8019; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
+li { background: #fff6ef; padding: 10px; margin-top: 8px; border-radius: 8px; display: flex; justify-content: space-between; list-style: none; }
+#list { padding: 0; }
+.del { background: red; width: auto; padding: 5px 10px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🍛 Rajesh Hotel</h1>
+  <input id="name" placeholder="Dish Name - ex: Biryani">
+  <input id="price" type="number" placeholder="Price">
+  <button onclick="addOrder()">ADD ORDER</button>
+  <button onclick="loadOrders()" style="background:#333">Refresh List</button>
+  <ul id="list"></ul>
+</div>
+<script>
+  const API = "http://127.0.0.1:8000";
+  async function loadOrders() {
+    let res = await fetch(API + "/all-orders");
+    let data = await res.json();
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+    data.forEach(o => {
+      list.innerHTML += `<li><span>${o.id}. ${o.name} - Rs.${o.price}</span><button class="del" onclick="deleteOrder(${o.real_id})">X</button></li>`;
+    });
+  }
+  async function addOrder() {
+    let name = document.getElementById("name").value;
+    let price = document.getElementById("price").value;
+    if(!name || !price) return alert("Name, price kottu ra!");
+    await fetch(API + "/order", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({name, price: parseInt(price)})
+    });
+    document.getElementById("name").value = "";
+    document.getElementById("price").value = "";
+    loadOrders();
+  }
+  async function deleteOrder(id) {
+    await fetch(API + "/order/" + id, {method: "DELETE"});
+    loadOrders();
+  }
+  loadOrders();
+</script>
+</body>
+</html>
